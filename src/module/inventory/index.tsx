@@ -89,7 +89,7 @@ const InventoryView: React.FC = () => {
             {
                 title: 'Action',
                 key: 'action',
-                render: (_, record: Product) => (
+                render: (_: any, record: Product) => (
                     <div className="flex gap-2 text-gray-400">
                         <EditFilled
                             className={`${!record.disabled && isAdmin ? 'cursor-pointer text-green-400' : 'disabled-icon'}`}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Modal, Input, Button, Form } from 'antd';
+import React, { useEffect } from 'react';
+import { Modal, Input, Button, Form, Row, Col } from 'antd';
 
 interface EditProductModalProps {
     visible: boolean;
@@ -9,9 +9,19 @@ interface EditProductModalProps {
     productName: string;
 }
 
-
 const EditProductModal: React.FC<EditProductModalProps> = ({ visible, onCancel, onSave, productId, productName }) => {
     const [form] = Form.useForm();
+
+    useEffect(() => {
+        if (visible) {
+            form.setFieldsValue({
+                category: '',
+                price: '',
+                quantity: '',
+                value: '',
+            });
+        }
+    }, [visible, form]);
 
     const handleSave = () => {
         form
@@ -24,22 +34,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ visible, onCancel, 
                 form.resetFields();
             })
             .catch((info) => {
-                console.log('Validate Failed:', info);
+                console.error('Validate Failed:', info);
             });
     };
 
-    const handleValuesChange = (changedValues: {
-        category?: string;
-        price?: number;
-        quantity?: number;
-        value?: number;
-    }, allValues: {
-        category: string;
-        price: number;
-        quantity: number;
-        value: number;
-    }) => {
-        console.log(allValues);
+    const handleValuesChange = (changedValues: { category?: string; price?: number; quantity?: number; value?: number }, allValues: { category: string; price: number; quantity: number; value: number }) => {
+        console.log(changedValues, allValues);
         const { price, quantity } = allValues;
         if (price && quantity) {
             form.setFieldsValue({ value: price * quantity });
@@ -53,7 +53,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ visible, onCancel, 
             onCancel={onCancel}
             footer={null}
         >
-            <h2 className="text-lg font-semibold text-gray-300 my-4">{`${productName}`}</h2>
+            <h2 className="text-lg font-semibold text-gray-300 my-4">{productName}</h2>
             <Form
                 form={form}
                 layout="vertical"
@@ -65,42 +65,46 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ visible, onCancel, 
                 }}
                 onValuesChange={handleValuesChange}
             >
-                <div className="flex justify-between gap-2">
-                    <Form.Item
-                        className="w-1/2"
-                        name="category"
-                        label="Category"
-                        rules={[{ required: true, message: 'Please input the category!' }]}
-                    >
-                        <Input size="large" />
-                    </Form.Item>
-                    <Form.Item
-                        className="w-1/2"
-                        name="price"
-                        label="Price"
-                        rules={[{ required: true, message: 'Please input the price!' }]}
-                    >
-                        <Input size="large" type="number" />
-                    </Form.Item>
-                </div>
-                <div className="flex justify-between gap-2">
-                    <Form.Item
-                        className="w-1/2"
-                        name="quantity"
-                        label="Quantity"
-                        rules={[{ required: true, message: 'Please input the quantity!' }]}
-                    >
-                        <Input size="large" type="number" />
-                    </Form.Item>
-                    <Form.Item
-                        className="w-1/2"
-                        name="value"
-                        label="Value"
-                        rules={[{ required: true, message: 'Please input the value!' }]}
-                    >
-                        <Input disabled size="large" type="number" />
-                    </Form.Item>
-                </div>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item
+                            name="category"
+                            label="Category"
+                            rules={[{ required: true, message: 'Please input the category!' }]}
+                        >
+                            <Input size="large" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item
+                            name="price"
+                            label="Price"
+                            rules={[{ required: true, message: 'Please input the price!' }]}
+                        >
+                            <Input size="large" type="number" />
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item
+                            name="quantity"
+                            label="Quantity"
+                            rules={[{ required: true, message: 'Please input the quantity!' }]}
+                        >
+                            <Input size="large" type="number" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item
+                            name="value"
+                            label="Value"
+                            rules={[{ required: true, message: 'Please input the value!' }]}
+                        >
+                            <Input disabled size="large" type="number" />
+                        </Form.Item>
+                    </Col>
+                </Row>
                 <div className='flex justify-end'>
                     <Form.Item>
                         <Button type='text' onClick={onCancel} style={{ marginRight: 8 }}>

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-// Define the product type
+
 export interface Product {
   id: string;
   name: string;
@@ -11,7 +11,6 @@ export interface Product {
   disabled?: boolean;
 }
 
-// Define the inventory state
 interface InventoryState {
   products: Product[];
   totalProducts: number;
@@ -21,7 +20,6 @@ interface InventoryState {
   categories: Set<string>;
 }
 
-// Initial state
 const initialState: InventoryState = {
   products: [],
   totalProducts: 0,
@@ -31,27 +29,30 @@ const initialState: InventoryState = {
   categories: new Set(),
 };
 
+const calculateTotals = (products: Product[]) => {
+  const enabledProducts = products.filter((p) => !p.disabled);
+  const totalProducts = enabledProducts.length;
+  const totalValue = enabledProducts.reduce((sum, p) => sum + Number(p.value.slice(1)), 0);
+  const categories = new Set(enabledProducts.map((p) => p.category));
+  const totalCategories = categories.size;
+  const outOfStockCount = enabledProducts.filter((p) => p.quantity === 0).length;
+
+  return { totalProducts, totalValue, totalCategories, outOfStockCount, categories };
+};
 
 const inventorySlice = createSlice({
   name: 'inventory',
   initialState,
   reducers: {
     setProducts(state, action: PayloadAction<Product[]>) {
-        console.log(action.payload)
       const products = action.payload.map((product) => ({
         ...product,
-        id: product.id ? `${product.id}-${uuidv4()}` : uuidv4(),
+        id: product.id || uuidv4(),
       }));
 
       state.products = products;
-
-      const enabledProducts = products.filter((p) => !p.disabled);
-
-      state.totalProducts = enabledProducts.length;
-      state.totalValue = enabledProducts.reduce((sum, p) => sum + Number(p.value.slice(1)), 0);
-      state.categories = new Set(enabledProducts.map((p) => p.category));
-      state.totalCategories = state.categories.size;
-      state.outOfStockCount = enabledProducts.filter((p) => p.quantity === 0).length;
+      const totals = calculateTotals(products);
+      Object.assign(state, totals);
     },
     editProduct(state, action: PayloadAction<{ id: string; updates: Partial<Product> }>) {
       const { id, updates } = action.payload;
@@ -59,27 +60,15 @@ const inventorySlice = createSlice({
 
       if (product) {
         Object.assign(product, updates);
-
-        const enabledProducts = state.products.filter((p) => !p.disabled);
-
-        state.totalProducts = enabledProducts.length;
-        state.totalValue = enabledProducts.reduce((sum, p) => sum + Number(p.value.slice(1)), 0);
-        state.categories = new Set(enabledProducts.map((p) => p.category));
-        state.totalCategories = state.categories.size;
-        state.outOfStockCount = enabledProducts.filter((p) => p.quantity === 0).length;
+        const totals = calculateTotals(state.products);
+        Object.assign(state, totals);
       }
     },
     deleteProduct(state, action: PayloadAction<string>) {
       const id = action.payload;
       state.products = state.products.filter((p) => p.id !== id);
-
-      const enabledProducts = state.products.filter((p) => !p.disabled);
-
-      state.totalProducts = enabledProducts.length;
-      state.totalValue = enabledProducts.reduce((sum, p) => sum + Number(p.value.slice(1)), 0);
-      state.categories = new Set(enabledProducts.map((p) => p.category));
-      state.totalCategories = state.categories.size;
-      state.outOfStockCount = enabledProducts.filter((p) => p.quantity === 0).length;
+      const totals = calculateTotals(state.products);
+      Object.assign(state, totals);
     },
     disableProduct(state, action: PayloadAction<string>) {
       const id = action.payload;
@@ -87,20 +76,12 @@ const inventorySlice = createSlice({
 
       if (product) {
         product.disabled = !product.disabled;
-
-        const enabledProducts = state.products.filter((p) => !p.disabled);
-
-        state.totalProducts = enabledProducts.length;
-        state.totalValue = enabledProducts.reduce((sum, p) => sum + Number(p.value.slice(1)), 0);
-        state.categories = new Set(enabledProducts.map((p) => p.category));
-        state.totalCategories = state.categories.size;
-        state.outOfStockCount = enabledProducts.filter((p) => p.quantity === 0).length;
+        const totals = calculateTotals(state.products);
+        Object.assign(state, totals);
       }
     },
   },
 });
 
-
-// Export actions and reducer
 export const { setProducts, editProduct, deleteProduct, disableProduct } = inventorySlice.actions;
 export default inventorySlice.reducer;
